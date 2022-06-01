@@ -1,4 +1,4 @@
-#Genotype Reconstruction From Pool Sequences (Haplo/Diploid polyandric species Hymenoptera)
+# Genotype Reconstruction From Pool Sequences (Haplo/Diploid polyandric species Hymenoptera)
 
 Hymenoptera have a specific reproduction system and organisation were a single queen produces all the individuals of a colony. 
 In such system the colony is a group of individuals performing different 'tasks', workers are diploid and originate genetically for 1/2 from the queen and 1/2 from a male, coming itself from a pool of males having inseminated the queen; males are haploid and thus are direct representation of 1/2 of the queen genetics, as gametes. 
