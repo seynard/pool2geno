@@ -1,27 +1,9 @@
 # Genotype Reconstruction From Pool Sequences (Haplo/Diploid polyandric species Hymenoptera)
 
-Hymenoptera have a specific reproduction system and organisation were a single queen produces all the individuals of a colony. 
-In such system the colony is a group of individuals performing different 'tasks', workers are diploid and originate genetically for 1/2 from the queen and 1/2 from a male, coming itself from a pool of males having inseminated the queen; males are haploid and thus are direct representation of 1/2 of the queen genetics, as gametes. 
-Traits are in general measured at the colony level.
-
-The pipeline combines\
-i) an estimation of the genetic ancestry, colony per colony, (AM)\
-ii) the grouping of colonies based on ther ancestries to homogeneous populations and\
-iii) the reconstruction of honeybee queen genotypes within homogeneous groups, all using pool sequencing data as an input (HPM)\
-
-The pipeline was tested on\
-Simulations: where queen genotypes, allele frequencies in the drone pool are drawn from Dirichlet distributions in which sub-species are in specific proportions. With these simulations we tested the impact of depth, population composition in sub-species and model fit.\
-Simulations from real data: where males from a diversity panel (Wragg et al. 2021) were combined to create a 'queen' and a pool of drones and for which offspring were drawn from. Using real data it is possible to simulate expected linkage disequilibrium and thus test our models for this parameters.\
-Validated on real data: For 34 colonies we had pool sequencing data and individual sequence for 4 male offspring of the queen.\
-And compared with theroretical expectation using publicaly available data from Liu et al. 2015, for which 13 to 15 drone offspring and the queen were individually sequenced.\
-
-The genome version used is HAV3.1 (Wallberg et al. 2019, doi: xxx), the VCF for diversity panel from Wragg et al. 2022 (doi: xxx) with 870 and 628 individuals were used. 
-All scripts are available in this GitHub repository and on Zenodo, as well as the necessary input files to perform this analysis. This pipeline is available in the script RUN.sh. 
-
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 - [1. Introduction](#1-Introduction)
 - [2. Data preparation](#2-Data-preparation)
-	- [2.1. Initial step](#21-Initial-step)
+	- [2.1. Initial steps](#21-Initial-steps)
 	- [2.2. Making reference population](#22-Making-reference-population)
 	- [2.3. Input files for simulations](#23-Input-files-for-simulations)
 - [3. Run AM on simulations](#3-Run-AM-on-simulations)
@@ -38,6 +20,26 @@ All scripts are available in this GitHub repository and on Zenodo, as well as th
 <!-- /TOC -->
 
 ## 1. Introduction
+Hymenoptera have a specific reproduction system and organisation were a single queen produces all the individuals of a colony. 
+In such system the colony is a group of individuals performing different 'tasks', workers are diploid and originate genetically for 1/2 from the queen and 1/2 from a male, coming itself from a pool of males having inseminated the queen; males are haploid and thus are direct representation of 1/2 of the queen genetics, as gametes. 
+Traits are in general measured at the colony level.
+
+The pipeline combines\
+i) an estimation of the genetic ancestry, colony per colony, (AM)\
+ii) the grouping of colonies based on ther ancestries to homogeneous populations and\
+iii) the reconstruction of honeybee queen genotypes within homogeneous groups, all using pool sequencing data as an input (HPM)
+
+The pipeline was tested on\
+Simulations: where queen genotypes, allele frequencies in the drone pool are drawn from Dirichlet distributions in which sub-species are in specific proportions. With these simulations we tested the impact of depth, population composition in sub-species and model fit.\
+Simulations from real data: where males from a diversity panel (Wragg et al. 2021) were combined to create a 'queen' and a pool of drones and for which offspring were drawn from. Using real data it is possible to simulate expected linkage disequilibrium and thus test our models for this parameters.\
+Validated on real data: For 34 colonies we had pool sequencing data and individual sequence for 4 male offspring of the queen.\
+And compared with theroretical expectation using publicaly available data from Liu et al. 2015, for which 13 to 15 drone offspring and the queen were individually sequenced.
+
+The genome version used is HAV3.1 (Wallberg et al. 2019, doi: xxx), the VCF for diversity panel from Wragg et al. 2022 (doi: xxx) with 870 and 628 individuals were used. 
+All scripts are available in this GitHub repository and on Zenodo, as well as the necessary input files to perform this analysis. This pipeline is available in the script RUN.sh. 
+
+## 2. Data preparation
+### 2.1. Initial steps
 Some pre-requisite for needed programs (and their versions)
 ```bash
 module load bioinfo/admixture_linux-1.3.0
@@ -78,8 +80,6 @@ mkdir -p ${dirin}/log
 mkdir -p ${dirout}/log
 ```
 
-## 2. Data preparation
-### 2.1. Initial step
 Part of this study relies on the use of a VCF produced by Wragg et al. 2022 from a diversity panel. 
 The paper can be found doi: xxx and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0.\
 If needed this step can be run as follows
@@ -328,7 +328,7 @@ sbatch -W --mem=50G -o ${dirout}/log/admix_males_${prefix}.out -e ${dirout}/log/
 
 ### 7.2. Public data 
 Finally, Liu et al. 2015 (xxx) made available sequence data for 46 individuals, coming from 3 colonies. With 2 colonies having 15 males and 1 queen sequenced and the last colony having 13 males and the queen sequenced.\
-This dataset allows to perform resampling of male offspring (multiple times, 100 bootstrap, and different numbers, 4, 6, 8 and 10) and reconstruct the queen genotype from theirs. Therefore benchmarking the standard method for queen genotype reconstruction.\
+This dataset allows to perform resampling of male offspring (multiple times, 100 bootstrap, and different numbers, 4, 6, 8 and 10) and reconstruct the queen genotype from theirs. Therefore benchmarking the standard method for queen genotype reconstruction.
 
 
 Definition of additional parameters necessary for this part of the pipeline. 
