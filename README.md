@@ -18,8 +18,8 @@ All scripts are available in this GitHub repository and on Zenodo, as well as th
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 - [1. Introduction](#1-Introduction)
 - [2. Data preparation](#2-Data-preparation)
-	- [2.1. ](#21-Initial-step)
-	- [2.2. ](#22-Making-reference-population)
+	- [2.1.](#2.1.-Initial-step)
+	- [2.2.](#2.2.-Making-reference-population)
 - [3. ](#3-)
 - [4. ](#4-)
 	- [4.1. ](#41-)
