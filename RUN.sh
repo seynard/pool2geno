@@ -145,6 +145,7 @@ do
 	echo ${prefix}
 	sbatch -W -J ${prefix} -o ${dirout}/log/${prefix}.out -e ${dirout}/log/${prefix}.err --wrap="${script}/9_run_simul_data_1000.sh ${script} ${dirin} ${dirout} ${freq} ${n_col_snpid} 1 ${n_pop} ${pop_id} ${prefix} ${prefix0}"
 done
+#Repeat this process for depth 10 and 100. 
 
 ## Group colonies on genetic ancestries ## 
 sce_list='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15' #list of scenarios kept for analysis (here we did not use all our scenarios as we made extreme scenarios for other purposes or with changing parameters)
