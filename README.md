@@ -18,8 +18,8 @@ All scripts are available in this GitHub repository and on Zenodo, as well as th
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 - [1. Introduction](#1-Introduction)
 - [2. Data preparation](#2-Data-preparation)
-	- [2.1. ](#21---)
-	- [2.2. ](#22-)
+	- [2.1. ](#21-Initial-step)
+	- [2.2. ](#22-Making-reference-population)
 - [3. ](#3-)
 - [4. ](#4-)
 	- [4.1. ](#41-)
@@ -32,16 +32,16 @@ All scripts are available in this GitHub repository and on Zenodo, as well as th
 ## 1. Introduction
 Some pre-requisite for needed programs (and their versions)
 ```bash
-module load system/R-3.6.2
-module load system/pandoc-2.1.3
-module load system/Python-3.7.4
+module load bioinfo/admixture_linux-1.3.0
 module load bioinfo/bcftools-1.6
+module load bioinfo/bedtools-2.27.1
+module load system/pandoc-2.1.3
+module load bioinfo/plink-v1.90b5.3
+module load system/Python-3.7.4
+module load system/R-3.6.2
+module load bioinfo/samtools-1.8
 module load bioinfo/tabix-0.2.5
 module load bioinfo/vcftools-0.1.15
-module load bioinfo/admixture_linux-1.3.0
-module load bioinfo/plink-v1.90b5.3
-module load bioinfo/samtools-1.8
-module load bioinfo/bedtools-2.27.1
 ```
 Definition of the parameters and creation of the initial directorires
 ```bash
@@ -71,6 +71,7 @@ mkdir -p ${dirout}/log
 ```
 
 ## 2. Data preparation
+### 2.1. Initial step
 Part of this study relies on the use of a VCF produced by Wragg et al. 2022 from a diversity panel. 
 The paper can be found doi: xxx and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0. 
 If needed this step can be run as follows
@@ -79,23 +80,30 @@ mkdir -p ${dirin}/vcf_cleanup
 sbatch -J vcf_cleanup -o ${dirin}/log/vcf_cleanup.out -e ${dirin}/log/vcf_cleanup.err -W --wrap="${script}/vcf_cleanup/run_vcfcleanup.sh seynard ${script}/vcfcleanup ${dir_save}/The870vcf ${dirin} ${vcf_name}.vcf.gz 3 -999" # script to perform cleaning
 sbatch -W --wrap="mv ${dirin}/{plot_decision*,*_value.txt,venn*,*.vcf.log,geno.txt,gq.txt,info.txt,GQfiltered.txt,heterozygous.txt,list_kept.txt,missing.txt,snp_*.txt,count*.txt} ${dirin}/vcf_cleanup/" # move all files produced by vcfcleanup to specific directory
 ```
+One additional preparation step: For the purpose of this analysis we focused on autosomes
+```bash
+sbatch -W --wrap="sh ${script}/1_remove_mito.sh ${dirin} ${vcf_file} NC_001566.1" # removing mitochondrial markers.
+```
 
-
-sbatch -W --wrap="sh ${script}/1_remove_mito.sh ${dirin} ${vcf_file} NC_001566.1" # Additionally, we removed tri-allelic and mitochondrial markers.
+Final prepration of the files 
+```bash
 sbatch -W --wrap="bgzip -c ${vcf_file} > ${vcf_file}.gz"
 sbatch -W --wrap="bcftools query -f '%CHROM %POS\n' ${dirin}/vcf.vcf > ${dirin}/snp_pos.txt; sed -i "1i\CHROM POS" ${dirin}/snp_pos.txt" # extract chromosome and position information from vcf file
 chr=($(cut -f1 -d ' ' ${dirin}/snp_pos.txt | sort | uniq ))
 chr=("${chr[@]:1}") # remove first value of array chr as it contains the column name 'CHROM'
 sbatch -W --wrap="sed -i -e "s/${chr[0]}/1/g" -e "s/${chr[1]}/2/g" -e "s/${chr[2]}/3/g" -e "s/${chr[3]}/4/g" -e "s/${chr[4]}/5/g" -e "s/${chr[5]}/6/g" -e "s/${chr[6]}/7/g" -e "s/${chr[7]}/8/g" -e "s/${chr[8]}/9/g" -e "s/${chr[9]}/10/g" -e "s/${chr[10]}/11/g" -e "s/${chr[11]}/12/g" -e "s/${chr[12]}/13/g" -e "s/${chr[13]}/14/g" -e "s/${chr[14]}/15/g" -e "s/${chr[15]}/16/g" ${dirin}/vcf.vcf" # change chromosome name to chromosome number
-
-## Sub-species reference population ##
-# The diversity panel from Wragg et al. 2021 allowed for the identification of reference individuals, 'pure' individuals representing the sub-species of interest Mellifera, Ligustica_Carnica and Caucasia
-# Using Admixture, in a non supervised set up with k=3 we estimate the allele frequencies in each genetic background/sub species, we can also identify 'pure' individuals for whom the genetic ancestry for one of the three genetc background is above the set threshold 'unif_threshold'
+```
+### 2.2. Making reference population
+Allele frequencies for each of the genetic background on which we focus are necessary. 
+We base the definition of the reference population on the database of the diversity panel provided by Wragg et al. 2022 (xxx). 
+Such diversity panel allows for the identification of reference individuals, 'pure' individuals representing the sub-species of interest, in our case Mellifera, Ligustica_Carnica and Caucasia
+Using Admixture, in a non supervised set up with k=3 we estimate the allele frequencies in each genetic background/sub species, we can also identify 'pure' individuals for whom the genetic ancestry for one of the three genetc background is above the set threshold 'unif_threshold'
+```bash
 sbatch -J run_SeqApiPop -c ${ncpu} -o ${dirin}/log/run_SeqApiPop.out -e ${dirin}/log/run_SeqApiPop.err -W --wrap="${script}/2_run_SeqApiPop.sh ${script} ${dirout} ${dir_save} ${dirin} ${fasta} ${dirin}/vcf.vcf ${n_pop} ${ncpu} ${pop_id} ${unif_threshold}"
 sbatch -W --wrap="bcftools query -f '%CHROM,%POS,%REF,%ALT[,%GT]\n' ${dirin}/panel_seqapipop/vcf_subsp.vcf > ${dirin}/geno_ref.txt" # create genotype file for the reference individuals
 sbatch -W --wrap="sed -i -e 's:0/0:2:g' -e 's:0|0:2:g' -e 's:0/1:1:g' -e 's:0|1:1:g' -e 's:1/1:0:g' -e 's:1|1:0:g' -e 's:./.:-9:g' -e 's:\.:-9:g' ${dirin}/geno_ref.txt" # recode genotype file for the reference individuals from 0/0, 0/1, 1/1 and ./. to 0, 1, 2, -9
 sbatch -W --wrap="sed -i -e 's:-91:\.1:g' ${dirin}/geno_ref.txt"
-#####################################################################################################################################
+```
 
 #####################################################################################################################################
 ### Preparation of input files for the different simulation scenarios and estimation of the genetic composition of the queen for each colony based on the simulated genotypes and using the admixture model 
