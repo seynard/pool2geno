@@ -25,13 +25,10 @@ All scripts are available in this GitHub repository and on Zenodo, as well as th
 	- [2.2. Making reference population](#22-Making-reference-population)
 	- [2.3. Input files for simulations](#23-Input-files-for-simulations)
 - [3. Run AM on simulations](#3-Run-AM-on-simulations)
-
 	- [3.1. Simulations independent markers](#31-Simulations-independent-markers)
-	- [3.2. Simulations linked markers](#32-Simulations-linked-markers)
-	- [3.3. Simulations from real data](#33-Simulations-from-real-data)
-		- [3.3.1. Whole genome](#331-Whole-genome)
-		- [3.3.2. 1000 markers](#331-1000-markers)
-
+	- [3.2. Simulations from real data](#33-Simulations-from-real-data)
+		- [3.2.1. Whole genome](#331-Whole-genome)
+		- [3.2.2. 1000 markers](#331-1000-markers)
 - [4. Group colonies on genetic ancestries ](#4-Group-colonies-on-genetic-ancestries)
 - [5. Run HPM](#5-Run-HPM)
 - [6. Post-hoc analysis](#6-Post-hoc-analysis)
@@ -84,7 +81,7 @@ mkdir -p ${dirout}/log
 ## 2. Data preparation
 ### 2.1. Initial step
 Part of this study relies on the use of a VCF produced by Wragg et al. 2022 from a diversity panel. 
-The paper can be found doi: xxx and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0. 
+The paper can be found doi: xxx and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0.\
 If needed this step can be run as follows
 ```bash
 mkdir -p ${dirin}/vcf_cleanup
@@ -106,7 +103,7 @@ sbatch -W --wrap="sed -i -e "s/${chr[0]}/1/g" -e "s/${chr[1]}/2/g" -e "s/${chr[2
 ```
 ### 2.2. Making reference population
 Allele frequencies for each of the genetic background on which we focus are necessary. 
-We base the definition of the reference population on the database of the diversity panel provided by Wragg et al. 2022 (xxx). 
+We base the definition of the reference population on the database of the diversity panel provided by Wragg et al. 2022 (xxx).\
 Such diversity panel allows for the identification of reference individuals, 'pure' individuals representing the sub-species of interest, in our case Mellifera, Ligustica_Carnica and Caucasia
 Using Admixture, in a non supervised set up with k=3 we estimate the allele frequencies in each genetic background/sub species, we can also identify 'pure' individuals for whom the genetic ancestry for one of the three genetc background is above the set threshold 'unif_threshold'
 ```bash
@@ -116,13 +113,34 @@ sbatch -W --wrap="sed -i -e 's:0/0:2:g' -e 's:0|0:2:g' -e 's:0/1:1:g' -e 's:0|1:
 sbatch -W --wrap="sed -i -e 's:-91:\.1:g' ${dirin}/geno_ref.txt"
 ```
 ### 2.3. Input files for simulations
-In this section we prepare the input files that will be necessary for the different simulation scenarios and estimation of the genetic composition of the queen for each colony based on the simulated genotypes and using the admixture model (AM)
-Simulations independent markers
-Prep reference allele frequencies
-In order to perform the estimation of genetic ancestry we used a subset of markers with caracteristics such as: variance across the three genetic background above 0.1, maf above 0.1 
+In this section we prepare the input files that will be necessary for the different simulation scenarios and estimation of the genetic composition of the queen for each colony based on the simulated genotypes and using AM
+
+First, in order to perform the estimation of genetic ancestry we used a subset of markers with caracteristics such as: variance across the three genetic background above 0.1, maf above 0.1 
 ```bash
 sbatch -W="Rscript ${script}/3_marker_choice_freq.r ${dirin} ${pop_id}"
 cp ${dirin}/freq_admix_mv.txt ${dirin}/sim_freq.txt 
+```
+
+For 'complete' simulations the script prepares and creates input files as well as run the simulation directly after therefore the script to prepare this data set is included into the '5_run_simul.sh'
+
+For the simulations based on real data from haploid drones we used data from Wragg et al. (2022) (xxx) to create the different populations. It was first necessary to define groups based on genetic composition and to then sample individuals from the groups of interest to create our simulated colonies. For each colony we sampled 2 males to create a queen genome (2 chromosomes) and 15 other males were to create the mate group. From this we generated an offspring group for which we measured depth and frequencies.
+Definition of additional parameters  that are necessary for this section of the process
+```bash
+prefix='simul_data'
+nbmales=15 # simulated number of inseminating males
+depth=30 # simulated sequencing depth
+nboffspring=0 # optional to generate actual offspring from the mating of the simulated queen and the insemating drones. If set to 0 the pool will be based on an average allele frequency, if set to more than 0 we will create offspring genotypes and estimate the pool from these offspring
+```
+```bash
+sbatch -J prep_simul_data -o ${dirin}/log/prep_simul_data.out -e ${dirin}/log/prep_simul_data.err -W --wrap="${script}/6_prep_simul_data.sh ${script} ${dirout} ${dirin} ${dirin}/vcf.vcf ${nbmales} ${n_pop}"
+nbsimul=($(awk '{print $1}' $dirin/simul_data.txt | uniq))
+for i in ${nbsimul[@]}
+do
+	n=$((${i}+1))
+	simul_number=($(sed "${n}q;d" ${dirin}/choice_scenario_simul_data.txt|cut -f1))
+	echo ${simul_number}
+	sbatch -W --mem=20G -J prep_simul_data_${simul_number} -o ${dirin}/log/prep_simul_data_${simul_number}.out -e ${dirin}/log/prep_simul_data_${simul_number}.err --wrap="${script}/7_prep_simul_data2.sh ${script} ${dirin} ${dirout} ${nbmales} ${depth} ${nboffspring} ${simul_number} ${prefix}"
+done
 ```
 
 ## 3. Run AM on simulations
@@ -149,34 +167,17 @@ do
 	sbatch -W -J simul_${simul_number} -o ${dirout}/log/simul_${simul_number}.out -e ${dirout}/log/simul_${simul_number}.err --wrap="${script}/5_run_simul.sh ${dirin} ${dirout} ${script} ${nb_marker} ${simul_number} ${freq} ${n_col} ${n_col_prop} ${depth} ${distrib_q} ${distrib_d} ${ncpu} ${n_col_snpid} ${n_pop} ${pop_id} ${nbmales}" # run simulation 
 done
 ```
-### 3.2. Simulations linked markers
 
-Prep simulations from data
-Preparation of the input files necessary to run the simulations from real data
-For these simulations we used data from SeqApiPop to create population. 2 males were randomly chosen to create a queen, 15 other males were chosen to mate with the queen and we generated 500 offspring for which we measured depth and frequencies.
+### 3.2. Simulations from real data
+Definition of additional parameters necessary for this part of the pipeline. 
 ```bash
-prefix='simul_data'
-nbmales=15 # simulated number of inseminating males
-depth=30 # simulated sequencing depth
-nboffspring=0 # optional to generate actual offspring from the mating of the simulated queen and the insemating drones. If set to 0 the pool will be based on an average allele frequency, if set to more than 0 we will create offspring genotypes and estimate the pool from these offspring
-sbatch -J prep_simul_data -o ${dirin}/log/prep_simul_data.out -e ${dirin}/log/prep_simul_data.err -W --wrap="${script}/6_prep_simul_data.sh ${script} ${dirout} ${dirin} ${dirin}/vcf.vcf ${nbmales} ${n_pop}"
-nbsimul=($(awk '{print $1}' $dirin/simul_data.txt | uniq))
-for i in ${nbsimul[@]}
-do
-	n=$((${i}+1))
-	simul_number=($(sed "${n}q;d" ${dirin}/choice_scenario_simul_data.txt|cut -f1))
-	echo ${simul_number}
-	sbatch -W --mem=20G -J prep_simul_data_${simul_number} -o ${dirin}/log/prep_simul_data_${simul_number}.out -e ${dirin}/log/prep_simul_data_${simul_number}.err --wrap="${script}/7_prep_simul_data2.sh ${script} ${dirin} ${dirout} ${nbmales} ${depth} ${nboffspring} ${simul_number} ${prefix}"
-done
-```
-
-### 3.3. Simulations from real data
-#### 3.3.1. Whole genome
-```bash
-freq=freq_admix${n_pop}.txt
 prefix1='simul_data'
 n_col_snpid=4
 nbsimul=($(awk '{print $1}' ${dirin}/simul_data.txt | uniq))
+```
+#### 3.2.1. Whole genome (linked markers)
+```bash
+freq=freq_admix${n_pop}.txt
 for i in ${nbsimul[@]}
 do
 	echo ${i}
@@ -185,12 +186,10 @@ do
 	sbatch -W --mem=50G -J ${prefix} -o ${dirout}/log/${prefix}.out -e ${dirout}/log/${prefix}.err --wrap="${script}/8_run_simul_data.sh ${script} ${dirin} ${dirout} ${freq} ${n_col_snpid} ${ncpu} ${n_pop} ${pop_id} ${prefix} ${snp_list}"
 done
 ```
-#### 3.3.2. 1000 markers
+#### 3.2.2. 1000 markers (independent markers)
 ```bash
 freq='sim_freq.txt'
-prefix1='simul_data'
-n_col_snpid=4
-nbsimul=($(awk '{print $1}' ${dirin}/simul_data.txt | uniq))
+nbsimul=($(awk '{ $1}' ${dirin}/simul_data.txt | uniq))
 for i in ${nbsimul[@]}
 do
 	echo ${i}
@@ -200,8 +199,10 @@ do
 	sbatch -W -J ${prefix} -o ${dirout}/log/${prefix}.out -e ${dirout}/log/${prefix}.err --wrap="${script}/9_run_simul_data_1000.sh ${script} ${dirin} ${dirout} ${freq} ${n_col_snpid} 1 ${n_pop} ${pop_id} ${prefix} ${prefix0}"
 done
 ```
+The steps from 2.3. to 3.2.2 where repeated for depth 10 and 100. 
 
 ## 4. Group colonies on genetic ancestries 
+Using q-vectors of genetic background estimated by AM we can group colonies from our simulations into homogeneous populations (necessary to perform further analysis).
 ```bash
 sce_list='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15' #list of scenarios kept for analysis (here we did not use all our scenarios as we made extreme scenarios for other purposes or with changing parameters)
 n_col_snpid=2
@@ -216,7 +217,15 @@ do
 	done
 done
 ```
+
 ## 5. Run HPM
+Definition of additional parameters necessary for this part of the pipeline. 
+```bash
+n_col_snpid=2
+type=(simul simul_data1000 simul_data)
+DEPTH=(10 30 100)
+```
+For each homogeneous population we can now run HPM
 ```bash
 for a in ${type[@]}
 do
@@ -243,7 +252,13 @@ done
 ```
 
 ## 6. Post-hoc analysis
-Summarise informations
+Definition of additional parameters necessary for this part of the pipeline. 
+```bash
+n_col_snpid=2
+type=(simul simul_data1000 simul_data)
+DEPTH=(10 30 100)
+```
+Now we estimate statistics on the output of the model HPM for each of the homogeneous population. These statistics are: genotyping error, genotyping error as a function of MAF, genotyping error as a function of genotype probability, genotyping probability as a function of MAF, three way analysis of genotyping error as function of MAF bin and genotype probability, genotype calibration and genotype probability
 ```bash
 for a in ${type[@]}
 do
@@ -263,7 +278,9 @@ do
 	wait 10m
 	x=$(squeue -u seynard | grep 'sum' |wc -l)
 done
-# Combine summary
+```
+And finally we combine these summary statistics
+```bash
 for a in ${type[@]}
 do
 	for i in ${DEPTH[@]}
@@ -274,15 +291,12 @@ do
 done		
 ```
 
-
 ## 7. Validation
 ### 7.1. Real data pool and males
-Preparation of real data from MOSAR, 61 colonies with 40 of them having 2 to 4 males individually sequenced
-```bash
-sbatch -J prep_MOSAR -o ${dirin}/log/prep_MOSAR.out -e ${dirin}/log/prep_MOSAR.err -W --wrap="${script}/13_prep_MOSAR.sh ${script} ${dirout} ${dir_save} ${dirin} ${dir_popoolation} ${fasta} ${dirin}/vcf.vcf ${dirin}/vcf_males.vcf ${pool_size_def} ${nbjobs}"
-sbatch -W --wrap="${script}/14_mean_depth.sh ${dirin}/depth_mosar.txt ${dirin}/mean_depth_mosar.txt"
-```
-Parameters 
+For the purpose of validation of our models we had access to 34 colonies having one the one hand a pool of workers sequenced and on the other 4 males individually sequenced.\
+This dataset provides a comparison for queen genotype reconstruction based on using male offspring as 'gametes' of the queen and reconstruction based on a pool of workers made using our models. 
+
+Definition of additional parameters necessary for this part of the pipeline. 
 ```bash
 t_recom=0.02325581 #1 recombination across 43 meiosis to estimate genetic map using Liu et al (2015)
 seq_error=0.001 #sequencing error of 10^-3
@@ -290,30 +304,40 @@ prefix=mosar
 freq=freq_admix${n_pop}.txt
 n_col_snpid=4
 ```
-Run sequencially admixture model and homogeneous model, due to the sample size we did not perform any grouping of the colonies based on genetic composition before estimating the queen genotype, this step could be added if more samples were available
+
+```bash
+sbatch -J prep_MOSAR -o ${dirin}/log/prep_MOSAR.out -e ${dirin}/log/prep_MOSAR.err -W --wrap="${script}/13_prep_MOSAR.sh ${script} ${dirout} ${dir_save} ${dirin} ${dir_popoolation} ${fasta} ${dirin}/vcf.vcf ${dirin}/vcf_males.vcf ${pool_size_def} ${nbjobs}"
+sbatch -W --wrap="${script}/14_mean_depth.sh ${dirin}/depth_mosar.txt ${dirin}/mean_depth_mosar.txt"
+```
+
+Run sequencially AM and HPM.\
+Due to the sample size we did not perform any grouping of the colonies based on genetic composition before estimating the queen genotype, this step could be added if more samples were available
 ```bash
 sbatch -W --mem=50G -J ${prefix} -o ${dirout}/log/${prefix}.out -e ${dirout}/log/${prefix}.err --wrap="${script}/15_run_data.sh ${script} ${dirin} ${dirout} ${freq} ${n_col_snpid} ${ncpu} ${n_pop} ${pop_id} ${prefix} ${snp_list}"
 ```
-Male offspring of the queen are equivalent to gametes (haploid), therefore using these males we can estimate the genotype probability of the queen 
+
+As male offspring of the queen are equivalent to gametes (haploid), it is possible to estimate the genotype probability of the queen based on their genotypes.  
 ```bash
 sbatch -W -J male_2_queen -o ${dirout}/log/male_2_queen.out -e ${dirout}/log/male_2_queen.err --wrap="python ${script}/0_male_proba_geno.py ${dirout}/mosar ${dirin}/geno_males_${prefix}.txt ${seq_error}"
 ```
-Genetic composition estimation using ADMIXTURE on male offspring genotypes and queen genotypes estimated from probabilities using male offspring 
+
+Finally, we used ADMIXTURE to estimate genetic composition of male offspring and queen, reconstructed from these offspring. 
 ```bash
 sbatch -W --mem=50G -o ${dirout}/log/admix_males_${prefix}.out -e ${dirout}/log/admix_males_${prefix}.err --wrap="${script}/16_admix_males.sh ${script} ${dirin} ${dirout} ${freq} ${n_col_snpid} ${ncpu} ${n_pop} ${pop_id} ${prefix} ${snp_list}"
 ```
 
 ### 7.2. Public data 
-Liu et al. 2015 (xxx)
+Finally, Liu et al. 2015 (xxx) made available sequence data for 46 individuals, coming from 3 colonies. With 2 colonies having 15 males and 1 queen sequenced and the last colony having 13 males and the queen sequenced.\
+This dataset allows to perform resampling of male offspring (multiple times, 100 bootstrap, and different numbers, 4, 6, 8 and 10) and reconstruct the queen genotype from theirs. Therefore benchmarking the standard method for queen genotype reconstruction.\
 
-Parameters 
+
+Definition of additional parameters necessary for this part of the pipeline. 
 ```bash
 prefix=Liu
 t_recom=0.02325581 #1 recombination across 43 meiosis to estimate genetic map using Liu et al (2015)
 seq_error=0.001 # sequencing error of 10^-3
 ```
 
-Queen genotype probability estimation based on male offspring. Having between 13 and 15 males available we performed a 100 bootstrap of queen genotype estimations based on 4, 6, 8 or 10 males
 ```bash
 nind_test='4,6,8,10' # number of individuals sampled 
 col='Colony1,Colony2,Colony3'
