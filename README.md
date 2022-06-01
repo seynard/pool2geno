@@ -5,25 +5,17 @@ In such system the colony is a group of individuals performing different 'tasks'
 Traits are in general measured at the colony level.
 
 The pipeline combines 
-
-i) an estimation of the genetic ancestry, colony per colony, (AM)
-
-ii) the grouping of colonies based on ther ancestries to homogeneous populations and 
-
-iii) the reconstruction of honeybee queen genotypes within homogeneous groups, all using pool sequencing data as an input (HPM)
+i) an estimation of the genetic ancestry, colony per colony, (AM)<br />
+ii) the grouping of colonies based on ther ancestries to homogeneous populations and <br />
+iii) the reconstruction of honeybee queen genotypes within homogeneous groups, all using pool sequencing data as an input (HPM)<br />
 
 The pipeline was tested on 
-
-Simulations: where queen genotypes, allele frequencies in the drone pool are drawn from Dirichlet distributions in which sub-species are in specific proportions. With these simulations we tested the impact of depth, population composition in sub-species and model fit. 
-
-Simulations from real data: where males from a diversity panel (Wragg et al. 2021) were combined to create a 'queen' and a pool of drones and for which offspring were drawn from. Using real data it is possible to simulate expected linkage disequilibrium and thus test our models for this parameters.
-
-Validated on real data: For 34 colonies we had pool sequencing data and individual sequence for 4 male offspring of the queen.
-
-And compared with theroretical expectation using publicaly available data from Liu et al. 2015, for which 13 to 15 drone offspring and the queen were individually sequenced. 
+Simulations: where queen genotypes, allele frequencies in the drone pool are drawn from Dirichlet distributions in which sub-species are in specific proportions. With these simulations we tested the impact of depth, population composition in sub-species and model fit. <br />
+Simulations from real data: where males from a diversity panel (Wragg et al. 2021) were combined to create a 'queen' and a pool of drones and for which offspring were drawn from. Using real data it is possible to simulate expected linkage disequilibrium and thus test our models for this parameters.<br />
+Validated on real data: For 34 colonies we had pool sequencing data and individual sequence for 4 male offspring of the queen.<br />
+And compared with theroretical expectation using publicaly available data from Liu et al. 2015, for which 13 to 15 drone offspring and the queen were individually sequenced. <br />
 
 The genome version used is HAV3.1 (Wallberg et al. 2019, doi: xxx), the VCF for diversity panel from Wragg et al. 2022 (doi: xxx) with 870 and 628 individuals were used. 
-
 All scripts are available in this GitHub repository and on Zenodo, as well as the necessary input files to perform this analysis. This pipeline is available in the script RUN.sh. 
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
