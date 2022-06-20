@@ -235,7 +235,7 @@ do
 		for j in $(seq 1 ${n})
 		do
 			echo ${a} ${i} ${j}
-			sbatch -J hom -W --mem=200G --wrap=" python ${script}/beethoven/model_genoqueen_hom.py ${dirin}/Mix_${a} depth${i}_${j}.txt count${i}_${j}.txt ${n_col_snpid} 1 sim_model${i}_${j} 100000"
+			sbatch -J hom -W --mem=200G --wrap=" python .local/bin/model_genoqueen_hom ${dirin}/Mix_${a} depth${i}_${j}.txt count${i}_${j}.txt ${n_col_snpid} 1 sim_model${i}_${j} 100000"
 		done
 	done
 done
