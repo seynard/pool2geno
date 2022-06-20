@@ -65,6 +65,6 @@ rm ${dirin_data}/tmp_count ${dirin_data}/tmp_depth
 ############################################################################################
 # Run model HP
 ############################################################################################
-sbatch -J ${prefix}_hom --mem=200G -c ${ncpu} -W --wrap="python ${script}/beethoven/model_genoqueen_hom.py ${dirin_data} depth_${prefix}.txt count_ref_${prefix}.txt ${n_col_snpid} ${ncpu} sim_model1 100000 >> ${dirout_data}/log/mod1.out"
+sbatch -J ${prefix}_hom --mem=200G -c ${ncpu} -W --wrap="python .local/bin/genoqueen_hom ${dirin_data} depth_${prefix}.txt count_ref_${prefix}.txt ${n_col_snpid} ${ncpu} sim_model1 100000 >> ${dirout_data}/log/mod1.out"
 mv ${dirin_data}/sim_model1* ${dirout_data}/
 
