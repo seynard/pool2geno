@@ -113,7 +113,7 @@ sbatch -W --wrap="sed -i -e 's:0/0:2:g' -e 's:0|0:2:g' -e 's:0/1:1:g' -e 's:0|1:
 sbatch -W --wrap="sed -i -e 's:-91:\.1:g' ${dirin}/geno_ref.txt"
 ```
 ### 2.3. Input files for simulations
-In this section we prepare the input files that will be necessary for the different simulation scenarios and estimation of the genetic composition of the queen for each colony based on the simulated genotypes and using AM
+In this section we prepare the input files that will be necessary for the different simulation scenarios and estimation of the genetic composition of the queen for each colony based on the simulated genotypes and using AM 
 
 First, in order to perform the estimation of genetic ancestry we used a subset of markers with caracteristics such as: variance across the three genetic background above 0.1, maf above 0.1 
 ```bash
@@ -143,7 +143,7 @@ do
 done
 ```
 
-## 3. Run AM on simulations
+## 3. Run AM on simulations (script for AM available at https://github.com/BertrandServin/beethoven)
 ### 3.1. Simulations independent markers
 Run simulation. Here we can adjust the number of colonies, the number of markers, the depth, the frequency mean or variance threshold for resampling, the sub-species proportions in both queen and drones pool.
 Use of parameter file simul.txt columns: simulation number; dirichlet alpha parameters for queen genetic composition; dirichlet alpha parameters for inseminating drones genetic composition; number of simulated colonies; simulated sequencing depth; number of simulated markers
@@ -218,14 +218,14 @@ do
 done
 ```
 
-## 5. Run HPM
+## 5. Run HPM (script for HPM can be found at https://github.com/BertrandServin/beethoven)
 Definition of additional parameters necessary for this part of the pipeline. 
 ```bash
 n_col_snpid=2
 type=(simul simul_data1000 simul_data)
 DEPTH=(10 30 100)
 ```
-For each homogeneous population we can now run HPM
+For each homogeneous population we can now run HPM 
 ```bash
 for a in ${type[@]}
 do
