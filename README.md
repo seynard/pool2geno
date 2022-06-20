@@ -20,6 +20,9 @@
 <!-- /TOC -->
 
 ## 1. Introduction
+This repository contains the scripts to perform simulations and validation on real data that is described in the paper:
+From group to individual - Genotyping by pool sequencing eusocial colonies Sonia E Eynard, Alain Vignal, Benjamin Basso, Yves Le Conte, Axel Decourtye, Lucie Genestout, Emmanuelle Labarthe, Fanny Mondet, Kamila Tabet, Bertrand Servin bioRxiv 2021.11.08.467442; doi: https://doi.org/10.1101/2021.11.08.467442\
+
 Hymenoptera have a specific reproduction system and organisation were a single queen produces all the individuals of a colony. 
 In such system the colony is a group of individuals performing different 'tasks', workers are diploid and originate genetically for 1/2 from the queen and 1/2 from a male, coming itself from a pool of males having inseminated the queen; males are haploid and thus are direct representation of 1/2 of the queen genetics, as gametes. 
 Traits are in general measured at the colony level.
