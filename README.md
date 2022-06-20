@@ -35,8 +35,8 @@ Simulations from real data: where males from a diversity panel (Wragg et al. 202
 Validated on real data: For 34 colonies we had pool sequencing data and individual sequence for 4 male offspring of the queen.\
 And compared with theroretical expectation using publicaly available data from Liu et al. 2015, for which 13 to 15 drone offspring and the queen were individually sequenced.
 
-The genome version used is HAV3.1 (Wallberg et al. 2019, doi: xxx), the VCF for diversity panel from Wragg et al. 2022 (doi: xxx) with 870 and 628 individuals were used. 
-All scripts are available in this GitHub repository and on Zenodo, as well as the necessary input files to perform this analysis. This pipeline is available in the script RUN.sh. 
+The genome version used is HAV3.1 (Wallberg et al. 2019, doi: 10.1186/s12864-019-5642-0), the VCF for diversity panel from Wragg et al. 2022 (doi: 10.1111/1755-0998.13665) with 870 and 628 individuals were used. 
+All scripts to perform simulations and analysis are available in this GitHub repository as well as the necessary input files to perform this analysis, scripts for the statistical models are available at the GitHub repository : https://github.com/BertrandServin/beethoven. This pipeline is available in the script RUN.sh. 
 
 ## 2. Data preparation
 ### 2.1. Initial steps
@@ -81,7 +81,7 @@ mkdir -p ${dirout}/log
 ```
 
 Part of this study relies on the use of a VCF produced by Wragg et al. 2022 from a diversity panel. 
-The paper can be found doi: xxx and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0.\
+The paper can be found doi: 10.1111/1755-0998.13665 and the scripts to produce the VCF on the github repository https://github.com/avignal5/SeqApiPop. For the purpose of this study the VCF was 'cleaned' and markers were filtered according to the pipeline describe in https://github.com/seynard/vcf_cleanup, using the version v0.\
 If needed this step can be run as follows
 ```bash
 mkdir -p ${dirin}/vcf_cleanup
@@ -103,7 +103,7 @@ sbatch -W --wrap="sed -i -e "s/${chr[0]}/1/g" -e "s/${chr[1]}/2/g" -e "s/${chr[2
 ```
 ### 2.2. Making reference population
 Allele frequencies for each of the genetic background on which we focus are necessary. 
-We base the definition of the reference population on the database of the diversity panel provided by Wragg et al. 2022 (xxx).\
+We base the definition of the reference population on the database of the diversity panel provided by Wragg et al. 2022 (10.1111/1755-0998.13665).\
 Such diversity panel allows for the identification of reference individuals, 'pure' individuals representing the sub-species of interest, in our case Mellifera, Ligustica_Carnica and Caucasia
 Using Admixture, in a non supervised set up with k=3 we estimate the allele frequencies in each genetic background/sub species, we can also identify 'pure' individuals for whom the genetic ancestry for one of the three genetc background is above the set threshold 'unif_threshold'
 ```bash
@@ -123,7 +123,7 @@ cp ${dirin}/freq_admix_mv.txt ${dirin}/sim_freq.txt
 
 For 'complete' simulations the script prepares and creates input files as well as run the simulation directly after therefore the script to prepare this data set is included into the '5_run_simul.sh'
 
-For the simulations based on real data from haploid drones we used data from Wragg et al. (2022) (xxx) to create the different populations. It was first necessary to define groups based on genetic composition and to then sample individuals from the groups of interest to create our simulated colonies. For each colony we sampled 2 males to create a queen genome (2 chromosomes) and 15 other males were to create the mate group. From this we generated an offspring group for which we measured depth and frequencies.
+For the simulations based on real data from haploid drones we used data from Wragg et al. (2022) (10.1111/1755-0998.13665) to create the different populations. It was first necessary to define groups based on genetic composition and to then sample individuals from the groups of interest to create our simulated colonies. For each colony we sampled 2 males to create a queen genome (2 chromosomes) and 15 other males were to create the mate group. From this we generated an offspring group for which we measured depth and frequencies.
 Definition of additional parameters  that are necessary for this section of the process
 ```bash
 prefix='simul_data'
@@ -327,7 +327,7 @@ sbatch -W --mem=50G -o ${dirout}/log/admix_males_${prefix}.out -e ${dirout}/log/
 ```
 
 ### 7.2. Public data 
-Finally, Liu et al. 2015 (xxx) made available sequence data for 46 individuals, coming from 3 colonies. With 2 colonies having 15 males and 1 queen sequenced and the last colony having 13 males and the queen sequenced.\
+Finally, Liu et al. 2015 (10.1186/s13059-014-0566-0) made available sequence data for 46 individuals, coming from 3 colonies. With 2 colonies having 15 males and 1 queen sequenced and the last colony having 13 males and the queen sequenced.\
 This dataset allows to perform resampling of male offspring (multiple times, 100 bootstrap, and different numbers, 4, 6, 8 and 10) and reconstruct the queen genotype from theirs. Therefore benchmarking the standard method for queen genotype reconstruction.
 
 
